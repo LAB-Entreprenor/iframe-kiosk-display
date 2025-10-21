@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Display</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            background: #111;
+            overflow: hidden;
+        }
+
+        /* ---- Base grid behavior ---- */
+        .grid {
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        /* ---- AUTO LAYOUT ---- */
+        {% if layout == "auto" %}
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            grid-auto-rows: 1fr;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        /* ---- 2x2 GRID ---- */
+        {% elif layout == "2x2" %}
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 10px;
+            padding: 10px;
+        }
+
+        /* ---- HORIZONTAL (SIDE BY SIDE) ---- */
+        {% elif layout == "horizontal" %}
+        .grid {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: stretch;
+            gap: 10px;
+            padding: 10px;
+        }
+        .frame-container {
+            flex: 1;
+            height: 100%;
+        }
+
+        /* ---- FULLSCREEN SINGLE ---- */
+        {% elif layout == "fullscreen" %}
+        .grid {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+        .frame-container {
+            width: 100%;
+            height: 100%;
+        }
+        {% endif %}
+
+        /* ---- Common iframe styling ---- */
+        .frame-container {
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
+            border: 2px solid #333;
+            display: flex;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        /* ---- Offline banner ---- */
+        #offline-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 9999;
+            text-align: center;
+            font-family: sans-serif;
+            background: #b00;
+            color: white;
+            padding: 10px;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        #offline-banner.visible {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div id="offline-banner">
+        ⚠️ Offline mode — attempting to reconnect...
+    </div>
+
+    <div class="grid" id="grid">
+        {% for url in urls %}
+            <div class="frame-container">
+                <iframe src="{{ url }}" onerror="handleFrameError(this)"></iframe>
+            </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        let lastCheck = "{{ time.time() }}";
+        let lastKnown = 0;
+        let offline = false;
+
+        // --- Unified status + refresh check ---
+        async function checkStatus() {
+            try {
+                const [cfgRes, netRes] = await Promise.all([
+                    fetch("/last-updated", { cache: "no-store" }),
+                    fetch("/network-status", { cache: "no-store" })
+                ]);
+
+                // --- Network check ---
+                const net = await netRes.json();
+                if (!net.online) {
+                    showOffline(true);
+                    return;
+                }
+
+                // --- Auto-refresh check ---
+                const newTime = await cfgRes.text();
+                if (lastKnown && newTime !== lastKnown) {
+                    console.log("Config updated — refreshing display...");
+                    location.reload();
+                }
+                lastKnown = newTime;
+                showOffline(false);
+
+            } catch (err) {
+                console.warn("Status check failed:", err);
+                showOffline(true);
+            }
+        }
+
+        // --- Offline banner handling ---
+        function showOffline(state) {
+            const banner = document.getElementById("offline-banner");
+            if (state && !offline) {
+                banner.classList.add("visible");
+                offline = true;
+            } else if (!state && offline) {
+                banner.classList.remove("visible");
+                offline = false;
+            }
+        }
+
+        // --- Detect iframe load failures ---
+        function handleFrameError(iframe) {
+            console.error("Frame failed to load:", iframe.src);
+            showOffline(true);
+        }
+
+        // --- Run every 30 seconds ---
+        setInterval(checkStatus, 12000);
+    </script>
+</body>
+</html>
