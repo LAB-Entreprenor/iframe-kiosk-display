@@ -12,7 +12,10 @@ The app runs a small local Flask server and opens the display in a fullscreen Ch
 
 To quickly install; copy and paste this into the terminal:
 ```
-git clone https://github.com/LAB-Entreprenor/iframe-kiosk-display.git && cd ./iframe-kiosk-display && chmod +x install.sh && ./install.sh
+git clone https://github.com/LAB-Entreprenor/iframe-kiosk-display.git 
+cd ./iframe-kiosk-display 
+chmod +x install.sh
+./install.sh
 ```
 
 ### Display Mode
@@ -28,6 +31,8 @@ Auto – Automatically fits as many frames as possible per row
 Horizontal – Frames side-by-side in a single row
 
 Fullscreen – Displays one page at a time
+
+This is the standard display site
 
 Accessible through: ``http://localhost:5000/``
 
@@ -45,4 +50,9 @@ All settings are saved to config.json automatically
 Accessable through: ``http://localhost:5000/manage`` or ``http://<machine>.local:5000/manage``
 
 
-Skyss is a registered trademark of Hordaland County Councile (Hordaland Fylkeskommune) which is not affiliated with this product. 
+### Disclaimer
+
+This app is developed to be used with raspberry pi (linux) and View departures Service, 
+but there should be no problem using it to display any other web page suitable for an always on display.
+
+_Skyss is owned by VESTLAND FYLKESKOMMUNE SKYSS which is not affiliated with this project._
