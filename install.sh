@@ -40,8 +40,17 @@ apt install -y \
 
 # --- 2. Copy application files ---
 echo "[2/5] Deploying application to $PROJECT_DIR..." | tee -a "$LOGFILE"
+
 mkdir -p "$PROJECT_DIR"
-cp -r app.py templates assets "$PROJECT_DIR" 2>/dev/null || true
+
+# Copy main files
+install -m 644 app.py "$PROJECT_DIR/app.py"
+install -m 755 kiosk-session.sh "$PROJECT_DIR/kiosk-session.sh"
+
+# Copy template and asset folders if they exist
+[ -d "templates" ] && cp -r templates "$PROJECT_DIR/"
+[ -d "assets" ] && cp -r assets "$PROJECT_DIR/"
+
 
 # --- 3. Create systemd service files ---
 echo "[3/5] Creating systemd services..." | tee -a "$LOGFILE"
@@ -124,7 +133,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
   cat <<EOF > "$CONFIG_FILE"
 {
   "urls": [
-    "https://avgangsvisning.skyss.no/?stops=NSR:StopPlace:30938%7CNSR:Quay:53264&type=TERMINAL&colors=dark"
+    "https://avgangsvisning.skyss.no/view/#/?stops=NSR:StopPlace:58536%7CNSR:Quay:51856,NSR:StopPlace:58536%7CNSR:Quay:99918,NSR:StopPlace:58536%7CNSR:Quay:105980,NSR:StopPlace:58536%7CNSR:Quay:107744,NSR:StopPlace:58536%7CNSR:Quay:99927,NSR:StopPlace:58536%7CNSR:Quay:107747&viewFreq=10000&type=TERMINAL&colors=dark"
   ],
   "layout": "auto",
   "generator_url": "https://avgangsvisning.skyss.no"
