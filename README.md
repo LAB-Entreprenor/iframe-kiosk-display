@@ -7,7 +7,6 @@ It’s designed for kiosk displays, information screens, or public dashboards wh
 
 The app runs a small local Flask server and opens the display in a fullscreen Chromium browser window (kiosk mode).
 
-
 ### Quick install command
 
 To quickly install; copy and paste this into the terminal:
@@ -15,7 +14,7 @@ To quickly install; copy and paste this into the terminal:
 git clone https://github.com/LAB-Entreprenor/iframe-kiosk-display.git 
 cd ./iframe-kiosk-display 
 chmod +x install.sh
-./install.sh
+sudo ./install.sh
 ```
 
 ### Display Mode
@@ -47,7 +46,7 @@ Optionally embed an external generator page (for example, https://avgangsvisning
 
 All settings are saved to config.json automatically
 
-Accessable through: ``http://localhost:5000/manage`` or ``http://<machine>.local:5000/manage``
+Accessible through: ``http://localhost:5000/manage`` or ``http://<machine>.local:5000/manage``
 
 
 ### Disclaimer
