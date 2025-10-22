@@ -20,7 +20,7 @@
             box-sizing: border-box;
         }
 
- /* ---- AUTO LAYOUT ---- */
+        /* ---- AUTO LAYOUT ---- */
         {% if layout == "auto" %}
         .grid {
             display: grid;
@@ -63,6 +63,15 @@
             display: block;
         }
 
+        #empty-message {
+        animation: fadeIn 1.2s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+
         /* ---- Offline banner ---- */
         #offline-banner {
             position: fixed;
@@ -90,12 +99,49 @@
     </div>
 
     <div class="grid" id="grid">
-        {% for url in urls %}
-            <div class="frame-container">
-                <iframe src="{{ url }}" onerror="handleFrameError(this)"></iframe>
+        {% if urls and urls|length > 0 %}
+            {% for url in urls %}
+                <div class="frame-container">
+                    <iframe src="{{ url }}" onerror="handleFrameError(this)"></iframe>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div id="empty-message" style="
+                position:absolute;
+                inset:0;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                flex-direction:column;
+                text-align:center;
+                font-family:'Segoe UI', Roboto, sans-serif;
+                color:#ccc;
+                background:radial-gradient(circle at center, #1b1b1b 0%, #111 100%);
+            ">
+                <div style="
+                    background:#1e1e1e;
+                    border:1px solid #333;
+                    border-radius:16px;
+                    padding:40px 60px;
+                    box-shadow:0 0 20px rgba(0,0,0,0.5);
+                    max-width:500px;
+                ">
+                    <div style="font-size:3em; margin-bottom:10px;">🖥️</div>
+                    <div style="font-size:1.4em; font-weight:600; color:#eee;">
+                        No content to display
+                    </div>
+                    <div style="font-size:1em; color:#aaa; margin-top:10px; line-height:1.4em;">
+                        You haven’t added any display URLs yet.<br>
+                        Open the <b>Display Manager</b> at<br>
+                        <code style="background:#000; color:#4af; padding:2px 6px; border-radius:4px;">/manage</code><br>
+                        to add one or more pages.
+                    </div>
+                </div>
             </div>
-        {% endfor %}
+        {% endif %}
     </div>
+
+
 
     <script>
         let lastCheck = "{{ time.time() }}";
