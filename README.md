@@ -17,19 +17,17 @@ chmod +x install.sh
 sudo ./install.sh
 ```
 
+Files will be installed at ``/opt/display-kiosk/``
+
 ### Display Mode
 
 Shows multiple web pages (iframes) at once
 
 Supports four layout modes:
 
-Auto – Automatically fits as many frames as possible per row
-
-2×2 – Fixed four-frame grid
+Auto – Automatically fits frames in a grid-structrure
 
 Horizontal – Frames side-by-side in a single row
-
-Fullscreen – Displays one page at a time
 
 This is the standard display site
 
@@ -48,6 +46,27 @@ All settings are saved to config.json automatically
 
 Accessible through: ``http://localhost:5000/manage`` or ``http://<machine>.local:5000/manage``
 
+### Systemd powerd
+The app is running as systemd services, ``display-kiosk.service`` and `display-kiosk-session.service`
+
+Use `sudo systemctl status||restart||stop display-kiosk.service display-kiosk-session.service`
+to check status, restart or stop the services using the terminal or SSH into the host machine
+
+### Configuration
+The app uses a simple JSON configfile to store URLs and settings.
+These can be configures through the dashboard or by SSH remote to the host machine
+
+The file itself is will be located at: 
+```/opt/display-kiosk/config.json```
+
+`
+{    
+"urls": ["https://example.com", ...],
+"layout": "horizontal", 
+"generator_url": "https://avgangsvisning.skyss.no",
+"dashboard_enabled": true 
+}
+`
 
 ### Disclaimer
 

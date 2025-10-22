@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 import json
 import os
 import time
-import socket
 import subprocess
 import concurrent.futures
 
@@ -19,20 +18,27 @@ def load_config():
     """Load or initialize config.json"""
     if not os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, "w") as f:
-            json.dump({"urls": [], "layout": "auto", "generator_url": ""}, f)
+            json.dump({
+                "urls": [],
+                "layout": "auto",
+                "generator_url": "",
+                "dashboard_enabled": True  # 👈 new flag
+            }, f)
 
     with open(CONFIG_FILE, "r") as f:
         data = json.load(f)
 
     # --- Backward compatibility ---
     if isinstance(data, list):
-        data = {"urls": data, "layout": "auto", "generator_url": ""}
+        data = {"urls": data, "layout": "auto", "generator_url": "", "dashboard_enabled": True}
     if "generator_url" not in data:
         data["generator_url"] = ""
     if "layout" not in data:
         data["layout"] = "auto"
     if "urls" not in data:
         data["urls"] = []
+    if "dashboard_enabled" not in data:
+        data["dashboard_enabled"] = True  # 👈 add default if missing
 
     return data
 
@@ -71,9 +77,15 @@ def index():
 @app.route("/manage", methods=["GET", "POST"])
 def manage():
     config = load_config()
+
+    # --- Disable access if dashboard is locked ---
+    if not config.get("dashboard_enabled", True):
+        return "Dashboard is disabled. Edit config.json to re-enable.", 403
+
     urls = config["urls"]
     layout = config.get("layout", "auto")
     generator_url = config.get("generator_url", "")
+    message = None
 
     if request.method == "POST":
         # Add new display URL
@@ -95,6 +107,12 @@ def manage():
         elif "set_generator" in request.form:
             generator_url = request.form.get("generator_url", "").strip()
 
+        # Disable dashboard (self-lock)
+        elif "disable_dashboard" in request.form:
+            config["dashboard_enabled"] = False
+            save_config(config)
+            return "Dashboard disabled. Edit config.json to re-enable.", 200
+
         # Save all changes
         config["urls"] = urls
         config["layout"] = layout
@@ -108,7 +126,63 @@ def manage():
         urls=urls,
         layout=layout,
         generator_url=generator_url,
+        message=message,
+        config=config
     )
+
+
+
+# ==========================================================
+# --- SERVICE CONTROL: STOP DISPLAY SESSION ---
+# ==========================================================
+@app.route("/stop-session", methods=["POST"])
+def stop_session():
+    """Stop the Chromium kiosk display session"""
+    try:
+        subprocess.run(
+            ["sudo", "systemctl", "stop", "display-kiosk-session.service"],
+            check=True
+        )
+        message = "✅ Kiosk display session stopped."
+    except subprocess.CalledProcessError:
+        message = "⚠️ Failed to stop display session. Check permissions."
+
+    config = load_config()
+    urls = config.get("urls", [])
+    layout = config.get("layout", "auto")
+    generator_url = config.get("generator_url", "")
+
+    return render_template(
+        "manage.html",
+        urls=urls,
+        layout=layout,
+        generator_url=generator_url,
+        message=message
+    )
+
+
+@app.route("/reboot", methods=["POST"])
+def reboot_system():
+    """Reboot the Raspberry Pi or host system"""
+    try:
+        subprocess.run(["sudo", "reboot"], check=True)
+        message = "🔄 System is rebooting..."
+    except subprocess.CalledProcessError:
+        message = "⚠️ Failed to reboot system. Check permissions."
+
+    config = load_config()
+    urls = config.get("urls", [])
+    layout = config.get("layout", "auto")
+    generator_url = config.get("generator_url", "")
+
+    return render_template(
+        "manage.html",
+        urls=urls,
+        layout=layout,
+        generator_url=generator_url,
+        message=message
+    )
+
 
 
 # ==========================================================

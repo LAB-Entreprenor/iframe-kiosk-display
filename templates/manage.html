@@ -192,9 +192,7 @@
             <form method="post">
                 <select name="layout" onchange="this.form.submit()">
                     <option value="auto" {% if layout == "auto" %}selected{% endif %}>Auto-fit grid</option>
-                    <option value="2x2" {% if layout == "2x2" %}selected{% endif %}>Fixed 2×2 grid</option>
                     <option value="horizontal" {% if layout == "horizontal" %}selected{% endif %}>Horizontal row</option>
-                    <option value="fullscreen" {% if layout == "fullscreen" %}selected{% endif %}>Fullscreen single</option>
                 </select>
                 <p class="note">Changes apply immediately to the display view.</p>
             </form>
@@ -231,16 +229,62 @@
             <h2>Generator Tool</h2>
             {% if generator_url %}
                 <iframe src="{{ generator_url }}"></iframe>
+            {% else %}
+                <p class="empty">No generator tool configured.</p>
             {% endif %}
-            <form method="post" class="input-row">
-                <input type="text" name="generator_url" placeholder="Set generator URL..." value="{{ generator_url }}">
-                <button type="submit" name="set_generator">Save</button>
-                {% if generator_url %}
-                    <button type="submit" name="set_generator" value="">Clear</button>
-                {% endif %}
-            </form>
-            <p class="note">Example: https://avgangsvisning.skyss.no</p>
         </section>
+
+
+<!-- Unified Control Row -->
+<div style="
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+">
+    <!-- Service Control -->
+    <section class="card">
+        <h2>Service Control</h2>
+
+        <form method="post" action="{{ url_for('stop_session') }}" style="display:inline;">
+            <button type="submit" style="background:#e74c3c;color:white;">🛑 Stop Display Session</button>
+        </form>
+
+        <form method="post" action="{{ url_for('reboot_system') }}" style="display:inline;margin-left:10px;">
+            <button type="submit" style="background:#f39c12;color:white;">🔄 Reboot System</button>
+        </form>
+
+        <p class="note" style="margin-top:10px;">
+            Use these controls to restart or stop the display service for troubleshooting or maintenance.
+        </p>
+
+        {% if message %}
+            <p style="margin-top:10px;color:#4af;">{{ message }}</p>
+        {% endif %}
+    </section>
+
+    <!-- Dashboard Control -->
+    <section class="card">
+        <h2>Dashboard Access</h2>
+        <form method="post">
+            {% if config.dashboard_enabled %}
+            <button type="submit" name="disable_dashboard" style="background:#c0392b;color:white;">
+                🚫 Disable Dashboard
+            </button>
+            {% else %}
+            <button type="submit" disabled style="background:#555;color:white;">
+                🔒 Dashboard Locked
+            </button>
+            {% endif %}
+        </form>
+
+        <p class="note" style="margin-top:10px;">
+            Disabling this prevents future access to <code>/manage</code> until re-enabled manually in <code>config.json</code>.
+        </p>
+    </section>
+</div>
+
+
+
 
     </main>
 </body>
